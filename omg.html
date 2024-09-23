@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prelim Grade Calculator</title>
+    <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css">
+    <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #632525;
+        }
+
+        #header{
+            font-size: 30px;
+            margin-left: 60px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: rgb(224, 222, 208);
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        label, input {
+            display: block;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #af4c4c;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: #535c54;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e7e0da;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: large;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="header"><h1>Prelim Grade Calculator</h1></div>
+    <!-- Input form for grades and absences -->
+    <form>
+        <label for="attendance_absences">Number of Absences:</label>
+        <input type="number" id="attendance_absences" min="0" max="100" placeholder="Enter numbers between 0-100">
+
+        <label for="prelim_exam_grade">Prelim Exam Grade:</label>
+        <input type="number" id="prelim_exam_grade" min="0" max="100" placeholder="Enter numbers between 0-100">
+
+        <label for="quiz">Quiz Grade:</label>
+        <input type="number" id="quiz" min="0" max="100" placeholder="Enter numbers between 0-100">
+
+        <label for="requirement">Requirement Grade:</label>
+        <input type="number" id="requirement" min="0" max="100" placeholder="Enter numbers between 0-100">
+
+        <label for="recitation">Recitation Grade:</label>
+        <input type="number" id="recitation" min="0" max="100" placeholder="Enter numbers between 0-100">
+
+        <button type="button" id="calculate_button">Calculate Final Grades</button>
+    </form>
+
+    <div class="result">
+        <h3>Results:</h3>
+        <div id="result"></div>
+        <div id="prelim_result"></div>
+        <div id="midterm_final_result"></div>
+        <div id="dean_result"></div>
+    </div>
+</div>
+
+<py-script>
+    from pyscript import Element
+    from js import alert  # Import JavaScript's alert function
+
+    # Function to calculate attendance grade
+    def calculate_attendance_grade(absences):
+        if absences >= 4:
+            alert("FAILED")  # Show the popup when absences are 4 or more
+            return "Four or more absences result in failure of the subject.", None
+        return max(0, 100 - (absences * 10))
+
+    # Function to calculate class standing
+    def calculate_class_standing(quiz, requirement, recitation):
+        return (quiz * 0.4) + (requirement * 0.3) + (recitation * 0.3)
+
+    # Function to calculate prelim grade
+    def calculate_prelim_grade(absences, quiz, requirement, recitation, prelim_exam):
+        attendance_score = calculate_attendance_grade(absences)
+        if isinstance(attendance_score, str):
+            return attendance_score, None
+
+        class_standing = calculate_class_standing(quiz, requirement, recitation)
+        prelim_grade = (prelim_exam * 0.6) + (attendance_score * 0.1) + (class_standing * 0.3)
+        return prelim_grade
+
+    # Function to calculate the grades needed for midterm and finals
+    def required_grades_for_target(prelim_grade, target):
+        return (target - (prelim_grade * 0.2)) / 0.8
+
+    # Main function to calculate final grades
+    def calculateFinalGrade(event):
+        result = ""
+        prelim_result = ""
+        midterm_final_result = ""
+        dean_result = ""
+
+        try:
+            # Retrieve values from inputs
+            absences = int(Element("attendance_absences").value)
+            prelim_exam = float(Element("prelim_exam_grade").value)
+            quiz = float(Element("quiz").value)
+            requirement = float(Element("requirement").value)
+            recitation = float(Element("recitation").value)
+
+            # Validate inputs
+            if not (0 <= absences <= 100) or not (0 <= quiz <= 100) or not (0 <= requirement <= 100) or not (0 <= recitation <= 100) or not (0 <= prelim_exam <= 100):
+                raise ValueError("All input must be between 0-100, Please try again.")
+
+            # Calculate prelim grade
+            prelim_grade = calculate_prelim_grade(absences, quiz, requirement, recitation, prelim_exam)
+            if isinstance(prelim_grade, str):  # If failed due to attendance
+                Element("result").element.innerText = prelim_grade
+                return
+
+            prelim_result = f"Your Prelim Grade: {prelim_grade:.2f}"
+
+            # Calculate required grades to pass and for Dean's list
+            pass_grade = required_grades_for_target(prelim_grade, 75)
+            dean_grade = required_grades_for_target(prelim_grade, 90)
+
+            midterm_final_result = f"Required Midterm/Final grade to pass: {pass_grade:.2f}"
+            dean_result = f"Required Midterm/Final grade for Dean's lister: {dean_grade:.2f}"
+
+        except ValueError as e:
+            result = f"Error: {str(e)}"
+
+        # Display the results
+        Element("result").element.innerText = result
+        Element("prelim_result").element.innerText = prelim_result
+        Element("midterm_final_result").element.innerText = midterm_final_result
+        Element("dean_result").element.innerText = dean_result
+
+    # Bind the calculate button
+    Element("calculate_button").element.onclick = calculateFinalGrade
+</py-script>
+
+</body>
+</html>
