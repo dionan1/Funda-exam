@@ -91,7 +91,7 @@
 
     def calculate_attendance_grade(absences):
         if absences >= 4:
-            alert("FAILED")  # Show the popup when absences are 4 or more
+            alert("FAILED! Four or more absences result in failure of the subject.")
             return "Four or more absences result in failure of the subject.", None
         return max(0, 100 - (absences * 10))
 
